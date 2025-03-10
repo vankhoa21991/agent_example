@@ -13,3 +13,4 @@ fastembed
 langchain-groq 
 crewai
 groq
+crewai[tools]
