@@ -14,3 +14,4 @@ langchain-groq
 crewai
 groq
 crewai[tools]
+duckduckgo-search
