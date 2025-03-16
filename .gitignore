@@ -19,3 +19,4 @@ bin-release/
 venv
 .env
 __pycache__
+.qodo
