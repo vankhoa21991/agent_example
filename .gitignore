@@ -20,3 +20,8 @@ venv
 .env
 __pycache__
 .qodo
+wikipedia_db
+output
+qdrant_storage
+http:/
+data
