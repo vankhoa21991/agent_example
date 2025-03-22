@@ -1,3 +1,4 @@
+# https://blog.futuresmart.ai/rag-system-with-async-fastapi-qdrant-langchain-and-openai
 import logging
 import os
 import asyncio
