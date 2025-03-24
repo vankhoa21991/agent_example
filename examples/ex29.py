@@ -95,22 +95,42 @@ def url_to_markdown(url: str) -> str:
     
     try:
         # Fetch the URL content
-        text = urllib.request.urlopen(url).read()
+        # text = urllib.request.urlopen(url).read()
         
-        # Create input document
-        in_doc = InputDocument(
-            path_or_stream=BytesIO(text),
-            format=InputFormat.HTML,
-            backend=HTMLDocumentBackend,
-            filename=f"{url.split('/')[-1]}.html",
+        # # Create input document
+        # in_doc = InputDocument(
+        #     path_or_stream=BytesIO(text),
+        #     format=InputFormat.HTML,
+        #     backend=HTMLDocumentBackend,
+        #     filename=f"{url.split('/')[-1]}.html",
+        # )
+        
+        # # Convert to document
+        # backend = HTMLDocumentBackend(in_doc=in_doc, path_or_stream=BytesIO(text))
+        # dl_doc = backend.convert()
+
+        accelerator_options = AcceleratorOptions(
+            num_threads=8, device=AcceleratorDevice.MPS
         )
-        
-        # Convert to document
-        backend = HTMLDocumentBackend(in_doc=in_doc, path_or_stream=BytesIO(text))
-        dl_doc = backend.convert()
+
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.accelerator_options = accelerator_options
+        pipeline_options.do_ocr = True
+        pipeline_options.do_table_structure = True
+        pipeline_options.table_structure_options.do_cell_matching = True
+
+        converter = DocumentConverter(format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                ),
+                InputFormat.IMAGE: TesseractOcrOptions(),
+                InputFormat.DOCX: None,
+                InputFormat.HTML: None,
+            })
+        result = converter.convert(url)
         
         # Export to markdown
-        markdown_text = dl_doc.export_to_markdown()
+        markdown_text = result.document.export_to_markdown()
         return markdown_text
     
     except Exception as e:
@@ -132,7 +152,7 @@ def pdf_to_markdown(pdf_path: str) -> str:
     try:
         # Configure accelerator options
         accelerator_options = AcceleratorOptions(
-            num_threads=8, device=AcceleratorDevice.CPU
+            num_threads=8, device=AcceleratorDevice.CUDA
         )
         
         # Configure pipeline options

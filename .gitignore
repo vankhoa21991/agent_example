@@ -25,3 +25,7 @@ output
 qdrant_storage
 http:/
 data
+chroma_storage
+.vscode
+*.md
+*.log
