@@ -29,3 +29,6 @@ chroma_storage
 .vscode
 *.md
 *.log
+GenAI_Agents
+agno
+awesome-llm-apps
