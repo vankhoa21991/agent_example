@@ -27,7 +27,6 @@ http:/
 data
 chroma_storage
 .vscode
-*.md
 *.log
 GenAI_Agents
 agno
