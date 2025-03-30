@@ -1,0 +1,25 @@
+# API dependencies
+fastapi>=0.104.0
+uvicorn>=0.23.2
+python-multipart>=0.0.6
+pydantic>=2.4.2
+pymongo>=4.5.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Docling dependencies
+docling>=0.1.0
+
+# LangGraph and RAG dependencies
+langgraph>=0.0.19
+groq>=0.4.0
+langchain>=0.0.335
+langchain-groq>=0.0.1
+langchain-openai>=0.0.1
+langchain-core>=0.1.17
+langchain-text-splitters>=0.0.1
+
+# Vector stores
+chromadb>=0.4.22
+qdrant-client>=1.7.0
+faiss-cpu>=1.7.4
