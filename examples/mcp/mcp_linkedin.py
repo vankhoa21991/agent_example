@@ -3,13 +3,15 @@ from fastmcp import FastMCP
 import os
 import logging
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 mcp = FastMCP("mcp-linkedin")
 logger = logging.getLogger(__name__)
 
 def get_client():
-    return Linkedin(os.getenv("LINKEDIN_EMAIL"), os.getenv("LINKEDIN_PASSWORD"), debug=True)
+    print(os.getenv('LINKEDIN_EMAIL'))
+    print(os.getenv("LINKEDIN_PASSWORD"))
+    return Linkedin(os.getenv("LINKEDIN_EMAIL"), os.getenv("LINKEDIN_PASSWORD"), debug=False)
 
 @mcp.tool()
 def get_feed_posts(limit: int = 10, offset: int = 0) -> str:
