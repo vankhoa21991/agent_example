@@ -148,9 +148,34 @@ def process_request(topic: str, platform: str) -> tuple:
     # Generate content
     result = generate_content(topic, platform)
     
+    # Convert markdown to HTML
+    if result['content']:
+        content = str(result['content'])
+        
+        # Replace markdown headers with HTML tags
+        lines = content.split('\n')
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if line.startswith('# '):
+                lines[i] = f'<h1>{line[2:].strip()}</h1>'
+            elif line.startswith('## '):
+                lines[i] = f'<h2>{line[3:].strip()}</h2>'
+            elif line.startswith('### '):
+                lines[i] = f'<h3>{line[4:].strip()}</h3>'
+        content = '\n'.join(lines)
+        
+        # Replace markdown bold with HTML strong tags
+        content = content.replace('**', '<strong>', 1)
+        while '**' in content:
+            content = content.replace('**', '</strong>', 1)
+            if '**' in content:
+                content = content.replace('**', '<strong>', 1)
+        
+        result['content'] = content
+    
     # Prepare response
     status = f"Status: {result['status']}\n{result['message']}"
-    preview_html = result['content'] if result['content'] else ""  # Use content directly
+    preview_html = result['content'] if result['content'] else ""
     content_json = json.dumps(result['content'], indent=2) if result['content'] else ""
     
     return status, preview_html, content_json
@@ -161,11 +186,35 @@ def create_interface():
     # Custom CSS
     css = """
     #preview-html {
-        height: 600px;
+        min-height: 200px;
+        height: auto;
         border: none;
         border-radius: 10px;
         background: white;
-        overflow-y: auto;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    #preview-html strong {
+        font-weight: 600;
+    }
+    #preview-html h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 2rem 0 1.5rem;
+        color: #1a202c;
+    }
+    #preview-html h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 1.75rem 0 1.25rem;
+        color: #2d3748;
+    }
+    #preview-html h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 1.5rem 0 1rem;
+        color: #2d3748;
     }
     .gradio-container {
         max-width: 1200px !important;

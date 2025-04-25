@@ -22,7 +22,7 @@ class Feedback(BaseModel):
     score: int = Field(description="The score of the content from 0 to 10")
 
 
-class ContentWriter(Workflow):
+class ContentWriterTeam(Workflow):
     """
     A workflow that creates and self-evaluates social media content.
     Uses a writer-reviewer pattern to iteratively improve content quality.
@@ -196,7 +196,7 @@ class ContentWriter(Workflow):
 
 if __name__ == "__main__":
     # Test the content writer
-    writer = ContentWriter(debug_mode=True)
+    writer = ContentWriterTeam(debug_mode=True)
     
     test_content = """
     The Rise of AI in Healthcare

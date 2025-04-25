@@ -9,6 +9,8 @@ import time
 import logging
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 # Set up logging to stderr only
 logging.basicConfig(
@@ -147,10 +149,10 @@ async def load_cookies(context, platform):
         return False
     
 class BrowserSession:
-    """Context manager for browser sessions with cookie persistence"""
-    
-    def __init__(self, platform='linkedin', headless=False, launch_timeout=30000, max_retries=3):
-        # Allow non-headless mode for visual verification
+    """Context manager for browser session with cookie persistence."""
+
+    def __init__(self, platform='linkedin', headless=True, launch_timeout=30000, max_retries=3):
+        # Default to headless mode to work in environments without X server
         logger.info(f"Initializing {platform} browser session (headless: {headless})")
         self.platform = platform
         self.headless = headless
@@ -357,6 +359,8 @@ async def login_linkedin_secure(ctx: Context | None = None) -> dict:
     logger.info("Starting secure LinkedIn login")
     username = os.getenv('LINKEDIN_USERNAME', '').strip()
     password = os.getenv('LINKEDIN_PASSWORD', '').strip()
+
+    print(username, password)
     
     # We'll pass the credentials to pre-fill them, but user can still modify them
     return await login_linkedin(username if username else None, password if password else None, ctx)

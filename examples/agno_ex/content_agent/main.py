@@ -29,7 +29,7 @@ from scheduler import schedule
 from research_team import ResearchTeam, BlogContent
 from preview import create_preview
 from models import Tweet, Thread, LinkedInPost
-from writing import ContentWriter
+from writing_team import ContentWriterTeam
 
 # Load environment variables
 load_dotenv()
@@ -55,7 +55,7 @@ class ContentPlanningWorkflow(Workflow):
     )
 
     # Content Writer: Creates and improves social media content
-    content_writer: ContentWriter = ContentWriter(
+    content_writer: ContentWriterTeam = ContentWriterTeam(
         session_id="content-writer",
         debug_mode=True,
     )

@@ -260,7 +260,7 @@ Here is how to transform your vector store into a retriever and then invoke the 
 
 retriever = vector_store.as_retriever(
     search_type="similarity_score_threshold",
-    search_kwargs={"k": 1, "score_threshold": 0.01},
+    search_kwargs={"k": 1, "score_threshold": 0.9},
 )
 response = retriever.invoke("Stealing from the bank is a crime")
 print(response)
