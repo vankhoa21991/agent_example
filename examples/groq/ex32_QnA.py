@@ -344,6 +344,7 @@ def main():
         print(f"Correct A{i+1}: {qa['correct_answer']}")
         print(f"Fake A{i+1}: {qa['fake_answer']}")
         print(f"Grading: {qa['grading_result']}")
+        print(f"Evidence: {qa['evidence']}")
         print(f"Topic: {qa['topic']}")
         print(f"Source: {qa['source_url']}")
 

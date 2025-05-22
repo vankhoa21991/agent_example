@@ -20,6 +20,8 @@ from agno.tools.firecrawl import FirecrawlTools
 from agno.utils.log import logger
 from agno.workflow import Workflow
 from pydantic import BaseModel, Field
+from firecrawl import FirecrawlApp
+from agno.tools.reasoning import ReasoningTools
 
 
 class NewsArticle(BaseModel):
@@ -254,7 +256,7 @@ class ResearchTeam(Workflow):
             logger.error(f"Error analyzing content: {str(e)}")
             raise
 
-    def run(self, topic: str, use_cache: bool = True) -> RunResponse:
+    def run_research(self, topic: str, use_cache: bool = True) -> RunResponse:
         """
         Runs the research team workflow.
         
@@ -317,17 +319,15 @@ if __name__ == "__main__":
     from rich.console import Console
     from rich.panel import Panel
     from rich.markdown import Markdown
+    from agno.models.groq import Groq
+    from agno.tools.reasoning import ReasoningTools
+    from firecrawl import FirecrawlApp
+    import os
 
     # Example research topics
     example_topics = [
-        "The Future of AI in Healthcare",
-        "Sustainable Living in 2024",
-        "The Impact of Climate Change",
-        "Understanding Quantum Computing",
-        "The Evolution of Social Media",
-        "Mental Health in the Digital Age",
-        "The Role of Blockchain",
-        "Remote Work Best Practices",
+        "electric vehicles",
+        "study tools"
     ]
 
     # Get topic from user
@@ -336,28 +336,114 @@ if __name__ == "__main__":
         default=random.choice(example_topics),
     )
 
-    # Initialize the research team
-    team = ResearchTeam(
-        session_id=f"research-{topic.lower().replace(' ', '-')}",
-        debug_mode=True,
-    )
-
-    # Run the research
     console = Console()
     with console.status("[bold green]Researching content...") as status:
-        response = team.run(topic)
+        # 1. Use agent with DuckDuckGoTools and ReasoningTools to get main topics and keyword suggestions
+        from agno.agent import Agent
+        from agno.tools.duckduckgo import DuckDuckGoTools
+        from agno.tools.reasoning import ReasoningTools
+        agent_search = Agent(
+            model=Groq(id="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API_KEY")),
+            tools=[DuckDuckGoTools(), ReasoningTools()],
+            description="You are a research assistant that uses web search and reasoning to extract main topics and suggest search keywords.",
+            show_tool_calls=True,
+            markdown=True,
+        )
+        initial_prompt = f"""
+        Use DuckDuckGo to search for the topic: '{topic}'.
+        Based on the top results, do the following:
+        1. Extract and list the 5-8 main topics or themes discussed (numbered list, each with a short description).
+        2. For each main topic, suggest 5 effective search keywords or queries (as a sub-list, one per line, no explanations).
+        Format:
+        1. [Topic name]: [Description]
+           - keyword 1
+           - keyword 2
+           ...
+        2. ...
+        """
+        initial_response = agent_search.run(initial_prompt)
+        initial_text = initial_response.content if hasattr(initial_response, 'content') else str(initial_response)
+        console.print("\n[bold green]Main Topics and Suggested Keywords:[/bold green]\n")
+        console.print(Markdown(initial_text))
 
-    # Display results
-    console.print("\n[bold green]Research Results:[/bold green]\n")
-    
-    for content in response.content["blog_contents"]:
-        console.print(Panel(
-            f"[bold blue]{content.title}[/bold blue]\n\n"
-            f"[italic]URL:[/italic] {content.url}\n\n"
-            f"[bold]Key Points:[/bold]\n" + "\n".join(f"- {point}" for point in content.key_points) + "\n\n"
-            f"[bold]Summary:[/bold]\n{content.summary}\n\n"
-            f"[bold]Content Preview:[/bold]\n{content.content[:500]}...",
-            title="📄 Blog Content Analysis",
-            border_style="blue"
-        ))
-        console.print("\n") 
+        # Parse topics and keywords from the agent's response
+        import re
+        topic_blocks = re.findall(r"\d+\.\s*(.+?):\s*(.+?)(?=(?:\n\d+\.|\Z))", initial_text, re.DOTALL)
+        topics_and_keywords = []
+        for block in topic_blocks:
+            topic_name = block[0].strip()
+            desc_and_keywords = block[1].strip().split('\n')
+            description = desc_and_keywords[0].strip()
+            keywords = [kw.strip('- ').strip() for kw in desc_and_keywords[1:] if kw.strip()]
+            topics_and_keywords.append({"topic": topic_name, "description": description, "keywords": keywords})
+        if not topics_and_keywords:
+            console.print("[red]Could not parse topics and keywords from the agent's response.[/red]")
+            exit(1)
+
+        # Let user select which topics/keywords to investigate further
+        topic_names = [tk["topic"] for tk in topics_and_keywords]
+        selected = Prompt.ask(
+            "[bold]Which topic(s) do you want to investigate further?[/bold] (comma-separated numbers)",
+            choices=[str(i+1) for i in range(len(topic_names))],
+            default="1"
+        )
+        selected_indices = [int(i.strip())-1 for i in selected.split(",") if i.strip().isdigit() and 0 <= int(i.strip())-1 < len(topic_names)]
+        selected_topics = [topics_and_keywords[i] for i in selected_indices]
+        console.print(f"\n[bold blue]You selected to investigate:[/bold blue] {', '.join(t['topic'] for t in selected_topics)}\n")
+
+        # Let user select which keywords to use for each selected topic
+        selected_keywords = []
+        for t in selected_topics:
+            if not t["keywords"]:
+                continue
+            selected_keywords.extend(t["keywords"])
+
+        if not selected_keywords:
+            console.print("[red]No keywords found for further investigation.[/red]")
+            exit(1)
+
+        # 2. For each selected keyword, redo the search, crawl, and analyze (as before)
+        for keyword in selected_keywords:
+            console.print(f"\n[bold yellow]Researching keyword:[/bold yellow] {keyword}")
+            ddg_results = DuckDuckGoTools().duckduckgo_search(query=keyword, max_results=5)
+            if isinstance(ddg_results, str):
+                try:
+                    ddg_results = json.loads(ddg_results)
+                except Exception:
+                    ddg_results = []
+            if not isinstance(ddg_results, list):
+                ddg_results = []
+            crawled_contents = []
+            for result in ddg_results:
+                url = result.get("href") or result.get("link")
+                title = result.get("title", "No Title")
+                if not url:
+                    continue
+                try:
+                    crawl_result = FirecrawlApp(api_key=os.getenv("FIRECRAWL_API_KEY")).scrape_url(url, params={"formats": ["markdown"]})
+                    content = crawl_result.get("markdown") if crawl_result else None
+                    if content:
+                        crawled_contents.append({
+                            "title": title,
+                            "url": url,
+                            "content": content
+                        })
+                except Exception as e:
+                    console.print(f"[yellow]Failed to crawl {url}: {e}[/yellow]")
+            if not crawled_contents:
+                console.print(f"[red]No content could be crawled for keyword '{keyword}'.[/red]")
+                continue
+            combined_content = "\n\n".join(f"Title: {c['title']}\nURL: {c['url']}\nContent:\n{c['content']}" for c in crawled_contents)
+            organize_prompt = f"""
+            Organize and summarize the following research results for the keyword '{keyword}'.
+            - Extract the main findings, trends, and insights.
+            - List any important facts, statistics, or unique perspectives.
+            - Provide a detailed summary of the content, do not skip any important details.
+            - Output in markdown with clear sections: Findings, Facts, Perspectives, Summary.
+            Content:
+            {combined_content}
+            """
+            organize_response = agent_search.run(organize_prompt)
+            organize_text = organize_response.content if hasattr(organize_response, 'content') else str(organize_response)
+            console.print(f"\n[bold green]Organized Research Results for '{keyword}':[/bold green]\n")
+            console.print(Markdown(organize_text)) 

@@ -1,0 +1,39 @@
+[submodule "public/agentic-patterns-course"]
+	path = public/agentic-patterns-course
+	url = https://github.com/neural-maze/agentic-patterns-course.git
+[submodule "public/agent-service-toolkit"]
+	path = public/agent-service-toolkit
+	url = git@github.com:JoshuaC215/agent-service-toolkit.git
+[submodule "public/agno"]
+	path = public/agno
+	url = git@github.com:agno-agi/agno.git
+[submodule "public/awesome-llm-apps"]
+	path = public/awesome-llm-apps
+	url = git@github.com:vankhoa21991/awesome-llm-apps.git
+[submodule "public/cookbook"]
+	path = public/cookbook
+	url = https://github.com/huggingface/cookbook.git
+[submodule "public/crewai_linkedin_post"]
+	path = public/crewai_linkedin_post
+	url = https://github.com/neural-maze/crewai_linkedin_post.git
+[submodule "public/GenAI_Agents"]
+	path = public/GenAI_Agents
+	url = git@github.com:vankhoa21991/GenAI_Agents.git
+[submodule "public/GenAI-Showcase"]
+	path = public/GenAI-Showcase
+	url = https://github.com/mongodb-developer/GenAI-Showcase.git
+[submodule "public/HumanInTheLoop"]
+	path = public/HumanInTheLoop
+	url = https://github.com/Shaveen12/HumanInTheLoop.git
+[submodule "public/linkedin-ghostwriter"]
+	path = public/linkedin-ghostwriter
+	url = https://github.com/Guido1Alessandro1Trevisan/linkedin-ghostwriter.git
+[submodule "public/open_deep_research"]
+	path = public/open_deep_research
+	url = git@github.com:vankhoa21991/open_deep_research.git
+[submodule "public/RAG_Techniques"]
+	path = public/RAG_Techniques
+	url = https://github.com/NirDiamant/RAG_Techniques.git
+[submodule "public/second-brain-ai-assistant-course"]
+	path = public/second-brain-ai-assistant-course
+	url = https://github.com/decodingml/second-brain-ai-assistant-course.git
